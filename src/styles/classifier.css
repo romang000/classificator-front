@@ -1,0 +1,273 @@
+:root {
+  --text: #6b6375;
+  --bg: #fff;
+  --border: #b8b7bd;
+  --soft-border: #d8d7dc;
+  --accent: #f2c58c;
+  --accent-border: #e2a963;
+  --muted: #6e6a75;
+  --danger: #d95b5b;
+  --radius: 14px;
+}
+
+.appFrame {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  min-height: 100svh;
+  padding: 10px 0 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topBar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0 6px;
+}
+
+.topBarTitle {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 18px;
+  background: #fff;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.topBarExit {
+  position: absolute;
+  right: 0;
+  top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.kbLayout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.contentBox {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 12px;
+  min-height: 520px;
+  box-sizing: border-box;
+}
+
+.sidebar {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: #fff;
+}
+
+.sidebarButton {
+  width: 100%;
+  border: 1px solid var(--soft-border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 9px 10px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 8px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.sidebarButtonActive {
+  background: var(--accent);
+  color: #402c0f;
+  border-color: var(--accent-border);
+}
+
+.innerPanel {
+  border: 1px solid var(--soft-border);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+  min-height: 340px;
+  box-sizing: border-box;
+}
+
+.innerPanelTitle {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.twoCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.threeCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.optionLine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--soft-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.optionText {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.iconBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--soft-border);
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.rowName {
+  text-align: center;
+  font-weight: 600;
+}
+
+.primaryBtn {
+  border-radius: 12px;
+  border: 1px solid var(--accent-border);
+  background: var(--accent);
+  cursor: pointer;
+  padding: 10px 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.smallActionBtn {
+  border: 1px solid var(--soft-border);
+  border-radius: 10px;
+  padding: 7px 12px;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+.textInput {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--soft-border);
+  padding: 12px 12px;
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.formRow {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 130px;
+  gap: 10px;
+  align-items: center;
+}
+
+.pillTabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pillTab {
+  border: 1px solid var(--soft-border);
+  border-radius: 12px;
+  padding: 9px 14px;
+  background: #fff;
+  cursor: pointer;
+  min-width: 170px;
+  text-align: center;
+}
+
+.pillTabActive {
+  background: var(--accent);
+  border-color: var(--accent-border);
+  font-weight: 600;
+}
+
+.checkAllRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.radioLike {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 2px solid var(--soft-border);
+  display: inline-block;
+  box-sizing: border-box;
+  background: #fff;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.radioLikeOn {
+  border-color: #f08a2a;
+  background: radial-gradient(circle at center, #f08a2a 0 55%, transparent 56% 100%);
+}
+
+.alertBox {
+  background: rgba(242, 197, 140, 0.25);
+  border: 1px solid rgba(226, 169, 99, 0.55);
+  color: #4a310f;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.loadingText {
+  text-align: center;
+  color: var(--muted);
+  padding: 20px 0;
+}
+
+.summaryBox {
+  padding: 10px 12px;
+  border: 1px dashed var(--soft-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.summaryLine {
+  padding: 6px 0;
+  color: #2a2a2a;
+  font-weight: 500;
+}
+
