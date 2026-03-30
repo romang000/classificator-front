@@ -85,7 +85,7 @@ export default function ClassificationPage() {
       <div className="topBar">
         <div className="topBarTitle">Выбор исходных значений</div>
         <button className="topBarExit" type="button" onClick={() => navigate('/editor')}>
-          Выход
+          Перейти в редактор базы знаний
         </button>
       </div>
 
@@ -189,7 +189,7 @@ export default function ClassificationPage() {
         {error && <div className="alertBox" style={{ marginTop: 12 }}>{error}</div>}
 
         <div className="formRow" style={{ gridTemplateColumns: '1fr 240px' }}>
-          <button className="smallActionBtn" type="button" onClick={() => navigate('/editor')}>
+          <button className="smallActionBtn" type="button" onClick={() => navigate('/view')}>
             Посмотреть базу знаний
           </button>
           <button

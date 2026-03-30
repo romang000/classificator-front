@@ -20,6 +20,7 @@ import {
 } from '../../api/knowledgeApi'
 import type { BreedPropertyRequest, Id, Property, PropertyValue } from '../../api/models'
 import type { Dispatch, SetStateAction } from 'react'
+import { ApiError } from '../../api/client'
 
 type EditorSection =
   | 'breeds'
@@ -39,6 +40,18 @@ function toggleSet(
     else next.add(valueId)
     return next
   })
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.message
+  }
+
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  return 'Произошла ошибка'
 }
 
 export default function KnowledgeBaseEditorPage() {
@@ -76,42 +89,73 @@ export default function KnowledgeBaseEditorPage() {
 
     setSelectedBreedId((prev) => prev ?? (b[0]?.id ?? null))
     setSelectedPropertyId((prev) => prev ?? (p[0]?.id ?? null))
-    setSelectedPropertyIdForBreedValues((prev) => prev ?? (p[0]?.id ?? null))
   }
 
   useEffect(() => {
-    reloadAll().catch((e) => setError(String(e)))
+    reloadAll().catch((e) => setError(getErrorMessage(e)))
   }, [])
 
-  // Load saved properties for selected breed
   useEffect(() => {
     async function run() {
-      if (selectedBreedId === null) return
+      if (selectedBreedId === null) {
+        setBreedPropertiesSaved(new Set())
+        setBreedPropertiesSelected(new Set())
+        return
+      }
+
       const resp = await getBreedPropertiesByBreedId(selectedBreedId)
       const ids = new Set<Id>(resp.properties.map((x) => x.id))
+
       setBreedPropertiesSaved(ids)
       setBreedPropertiesSelected(new Set(ids))
     }
-    run().catch((e) => setError(String(e)))
+
+    run().catch((e) => setError(getErrorMessage(e)))
   }, [selectedBreedId])
 
+  const breedPropertiesForSelectedBreed = useMemo(() => {
+    return properties.filter((p) => breedPropertiesSaved.has(p.id))
+  }, [properties, breedPropertiesSaved])
+
   useEffect(() => {
-  async function run() {
-    if (selectedBreedId === null || selectedPropertyIdForBreedValues === null) {
+    if (!breedPropertiesForSelectedBreed.length) {
+      setSelectedPropertyIdForBreedValues(null)
       setSavedValueIdsForBreedProperty(new Set())
       setSelectedValueIdsForBreedProperty(new Set())
       return
     }
 
-    const ids = await getBreedPropertyValues(selectedBreedId, selectedPropertyIdForBreedValues)
-    const next = new Set<Id>(ids)
+    if (
+      selectedPropertyIdForBreedValues === null ||
+      !breedPropertiesSaved.has(selectedPropertyIdForBreedValues)
+    ) {
+      setSelectedPropertyIdForBreedValues(breedPropertiesForSelectedBreed[0].id)
+      setSavedValueIdsForBreedProperty(new Set())
+      setSelectedValueIdsForBreedProperty(new Set())
+    }
+  }, [breedPropertiesForSelectedBreed, breedPropertiesSaved, selectedPropertyIdForBreedValues])
 
-    setSavedValueIdsForBreedProperty(next)
-    setSelectedValueIdsForBreedProperty(new Set(next))
-  }
+  useEffect(() => {
+    async function run() {
+      if (
+        selectedBreedId === null ||
+        selectedPropertyIdForBreedValues === null ||
+        !breedPropertiesSaved.has(selectedPropertyIdForBreedValues)
+      ) {
+        setSavedValueIdsForBreedProperty(new Set())
+        setSelectedValueIdsForBreedProperty(new Set())
+        return
+      }
 
-  run().catch((e) => setError(String(e)))
-}, [selectedBreedId, selectedPropertyIdForBreedValues])
+      const ids = await getBreedPropertyValues(selectedBreedId, selectedPropertyIdForBreedValues)
+      const next = new Set<Id>(ids)
+
+      setSavedValueIdsForBreedProperty(next)
+      setSelectedValueIdsForBreedProperty(new Set(next))
+    }
+
+    run().catch((e) => setError(getErrorMessage(e)))
+  }, [selectedBreedId, selectedPropertyIdForBreedValues, breedPropertiesSaved])
 
   const propertyValuesForSelectedProperty = useMemo(() => {
     if (selectedPropertyId === null) return []
@@ -120,8 +164,10 @@ export default function KnowledgeBaseEditorPage() {
 
   const possibleValuesForBreedProperty = useMemo(() => {
     if (selectedPropertyIdForBreedValues === null) return []
+    if (!breedPropertiesSaved.has(selectedPropertyIdForBreedValues)) return []
+
     return propertyValuesAll.filter((v) => v.propertyId === selectedPropertyIdForBreedValues)
-  }, [propertyValuesAll, selectedPropertyIdForBreedValues])
+  }, [propertyValuesAll, selectedPropertyIdForBreedValues, breedPropertiesSaved])
 
   async function addBreed() {
     if (!breedName.trim()) return
@@ -132,7 +178,7 @@ export default function KnowledgeBaseEditorPage() {
       setBreedName('')
       await reloadAll()
     } catch (e) {
-      setError(String(e))
+      setError(getErrorMessage(e))
     } finally {
       setLoading(false)
     }
@@ -145,7 +191,7 @@ export default function KnowledgeBaseEditorPage() {
       await deleteBreed(id)
       await reloadAll()
     } catch (e) {
-      setError(String(e))
+      setError(getErrorMessage(e))
     } finally {
       setLoading(false)
     }
@@ -160,7 +206,7 @@ export default function KnowledgeBaseEditorPage() {
       setPropertyName('')
       await reloadAll()
     } catch (e) {
-      setError(String(e))
+      setError(getErrorMessage(e))
     } finally {
       setLoading(false)
     }
@@ -173,7 +219,7 @@ export default function KnowledgeBaseEditorPage() {
       await deleteProperty(id)
       await reloadAll()
     } catch (e) {
-      setError(String(e))
+      setError(getErrorMessage(e))
     } finally {
       setLoading(false)
     }
@@ -189,7 +235,7 @@ export default function KnowledgeBaseEditorPage() {
       setPropertyValueName('')
       await reloadAll()
     } catch (e) {
-      setError(String(e))
+      setError(getErrorMessage(e))
     } finally {
       setLoading(false)
     }
@@ -202,7 +248,7 @@ export default function KnowledgeBaseEditorPage() {
       await deletePropertyValue(id)
       await reloadAll()
     } catch (e) {
-      setError(String(e))
+      setError(getErrorMessage(e))
     } finally {
       setLoading(false)
     }
@@ -232,113 +278,78 @@ export default function KnowledgeBaseEditorPage() {
       if (toDelete.length) {
         await deleteBreedProperties({ ...base, propertyIds: toDelete })
       }
+
       if (toAdd.length) {
         await createBreedProperties({ ...base, propertyIds: toAdd })
       }
 
       const resp = await getBreedPropertiesByBreedId(selectedBreedId)
       const ids = new Set<Id>(resp.properties.map((x) => x.id))
+
       setBreedPropertiesSaved(ids)
       setBreedPropertiesSelected(new Set(ids))
+
+      if (selectedPropertyIdForBreedValues !== null && !ids.has(selectedPropertyIdForBreedValues)) {
+        setSelectedPropertyIdForBreedValues(null)
+        setSavedValueIdsForBreedProperty(new Set())
+        setSelectedValueIdsForBreedProperty(new Set())
+      }
     } catch (e) {
-      setError(String(e))
+      setError(getErrorMessage(e))
     } finally {
       setLoading(false)
     }
   }
 
-  // async function addValuesToBreedProperty() {
-  //   if (selectedBreedId === null) return
-  //   if (selectedPropertyIdForBreedValues === null) return
-  //   if (selectedValueIdsForBreedProperty.size === 0) return
-
-  //   setLoading(true)
-  //   setError(null)
-  //   try {
-  //     await createBreedPropertyValue({
-  //       breedId: selectedBreedId,
-  //       propertyId: selectedPropertyIdForBreedValues,
-  //       propertyValueIds: Array.from(selectedValueIdsForBreedProperty),
-  //     })
-  //     setSelectedValueIdsForBreedProperty(new Set())
-  //     await reloadAll()
-  //   } catch (e) {
-  //     setError(String(e))
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
-  // async function deleteValuesFromBreedProperty() {
-  //   if (selectedBreedId === null) return
-  //   if (selectedPropertyIdForBreedValues === null) return
-  //   if (selectedValueIdsForBreedProperty.size === 0) return
-
-  //   setLoading(true)
-  //   setError(null)
-  //   try {
-  //     await deleteBreedPropertyValue({
-  //       breedId: selectedBreedId,
-  //       propertyId: selectedPropertyIdForBreedValues,
-  //       propertyValueIds: Array.from(selectedValueIdsForBreedProperty),
-  //     })
-  //     setSelectedValueIdsForBreedProperty(new Set())
-  //     await reloadAll()
-  //   } catch (e) {
-  //     setError(String(e))
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
   async function saveBreedPropertyValues() {
-  if (selectedBreedId === null) return
-  if (selectedPropertyIdForBreedValues === null) return
+    if (selectedBreedId === null) return
+    if (selectedPropertyIdForBreedValues === null) return
+    if (!breedPropertiesSaved.has(selectedPropertyIdForBreedValues)) return
 
-  const saved = savedValueIdsForBreedProperty
-  const selected = selectedValueIdsForBreedProperty
+    const saved = savedValueIdsForBreedProperty
+    const selected = selectedValueIdsForBreedProperty
 
-  const toDelete: Id[] = []
-  for (const id of saved) {
-    if (!selected.has(id)) toDelete.push(id)
-  }
-
-  const toAdd: Id[] = []
-  for (const id of selected) {
-    if (!saved.has(id)) toAdd.push(id)
-  }
-
-  setLoading(true)
-  setError(null)
-
-  try {
-    if (toDelete.length) {
-      await deleteBreedPropertyValue({
-        breedId: selectedBreedId,
-        propertyId: selectedPropertyIdForBreedValues,
-        propertyValueIds: toDelete,
-      })
+    const toDelete: Id[] = []
+    for (const id of saved) {
+      if (!selected.has(id)) toDelete.push(id)
     }
 
-    if (toAdd.length) {
-      await createBreedPropertyValue({
-        breedId: selectedBreedId,
-        propertyId: selectedPropertyIdForBreedValues,
-        propertyValueIds: toAdd,
-      })
+    const toAdd: Id[] = []
+    for (const id of selected) {
+      if (!saved.has(id)) toAdd.push(id)
     }
 
-    const ids = await getBreedPropertyValues(selectedBreedId, selectedPropertyIdForBreedValues)
-    const next = new Set<Id>(ids)
+    setLoading(true)
+    setError(null)
 
-    setSavedValueIdsForBreedProperty(next)
-    setSelectedValueIdsForBreedProperty(new Set(next))
-  } catch (e) {
-    setError(String(e))
-  } finally {
-    setLoading(false)
+    try {
+      if (toDelete.length) {
+        await deleteBreedPropertyValue({
+          breedId: selectedBreedId,
+          propertyId: selectedPropertyIdForBreedValues,
+          propertyValueIds: toDelete,
+        })
+      }
+
+      if (toAdd.length) {
+        await createBreedPropertyValue({
+          breedId: selectedBreedId,
+          propertyId: selectedPropertyIdForBreedValues,
+          propertyValueIds: toAdd,
+        })
+      }
+
+      const ids = await getBreedPropertyValues(selectedBreedId, selectedPropertyIdForBreedValues)
+      const next = new Set<Id>(ids)
+
+      setSavedValueIdsForBreedProperty(next)
+      setSelectedValueIdsForBreedProperty(new Set(next))
+    } catch (e) {
+      setError(getErrorMessage(e))
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   async function runCheckFill() {
     setLoading(true)
@@ -348,7 +359,7 @@ export default function KnowledgeBaseEditorPage() {
       const res = await checkFillKnowledge()
       setCheckFillResult(res)
     } catch (e) {
-      setError(String(e))
+      setError(getErrorMessage(e))
     } finally {
       setLoading(false)
     }
@@ -612,14 +623,10 @@ export default function KnowledgeBaseEditorPage() {
                     tabIndex={0}
                     onClick={() => {
                       setSelectedBreedId(b.id)
-                      setSelectedPropertyIdForBreedValues(null)
-                      setSelectedValueIdsForBreedProperty(new Set())
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         setSelectedBreedId(b.id)
-                        setSelectedPropertyIdForBreedValues(null)
-                        setSelectedValueIdsForBreedProperty(new Set())
                       }
                     }}
                     style={{
@@ -637,34 +644,38 @@ export default function KnowledgeBaseEditorPage() {
 
             <div className="innerPanel">
               <div className="innerPanelTitle">Свойства</div>
-              {properties.map((p) => {
-                const on = p.id === selectedPropertyIdForBreedValues
-                return (
-                  <div
-                    key={p.id}
-                    className="optionLine"
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      setSelectedPropertyIdForBreedValues(p.id)
-                      setSelectedValueIdsForBreedProperty(new Set())
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+              {!breedPropertiesForSelectedBreed.length ? (
+                <div className="loadingText">Для породы нет выбранных свойств</div>
+              ) : (
+                breedPropertiesForSelectedBreed.map((p) => {
+                  const on = p.id === selectedPropertyIdForBreedValues
+                  return (
+                    <div
+                      key={p.id}
+                      className="optionLine"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
                         setSelectedPropertyIdForBreedValues(p.id)
                         setSelectedValueIdsForBreedProperty(new Set())
-                      }
-                    }}
-                    style={{
-                      background: on ? 'rgba(242, 197, 140, 0.24)' : undefined,
-                      borderColor: on ? 'rgba(226,169,99,0.8)' : undefined,
-                    }}
-                  >
-                    <span className={`radioLike ${on ? 'radioLikeOn' : ''}`} />
-                    <div className="optionText">{p.name}</div>
-                  </div>
-                )
-              })}
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          setSelectedPropertyIdForBreedValues(p.id)
+                          setSelectedValueIdsForBreedProperty(new Set())
+                        }
+                      }}
+                      style={{
+                        background: on ? 'rgba(242, 197, 140, 0.24)' : undefined,
+                        borderColor: on ? 'rgba(226,169,99,0.8)' : undefined,
+                      }}
+                    >
+                      <span className={`radioLike ${on ? 'radioLikeOn' : ''}`} />
+                      <div className="optionText">{p.name}</div>
+                    </div>
+                  )
+                })
+              )}
             </div>
 
             <div className="innerPanel">
@@ -720,6 +731,7 @@ export default function KnowledgeBaseEditorPage() {
                   })}
                 </div>
               )}
+
               <div className="summaryBox">
                 {selectedValueIdsForBreedProperty.size ? (
                   Array.from(selectedValueIdsForBreedProperty).map((valueId) => {
@@ -759,7 +771,12 @@ export default function KnowledgeBaseEditorPage() {
                 <button
                   className="primaryBtn"
                   type="button"
-                  disabled={loading || selectedBreedId === null || selectedPropertyIdForBreedValues === null}
+                  disabled={
+                    loading ||
+                    selectedBreedId === null ||
+                    selectedPropertyIdForBreedValues === null ||
+                    !breedPropertiesSaved.has(selectedPropertyIdForBreedValues)
+                  }
                   onClick={saveBreedPropertyValues}
                 >
                   Сохранить
@@ -830,7 +847,7 @@ export default function KnowledgeBaseEditorPage() {
       <div className="topBar">
         <div className="topBarTitle">Редактор баз знаний</div>
         <button className="topBarExit" type="button" onClick={() => navigate('/')}>
-          Выход
+          Перейти к классификации
         </button>
       </div>
 
@@ -890,4 +907,3 @@ export default function KnowledgeBaseEditorPage() {
     </div>
   )
 }
-

@@ -16,9 +16,31 @@ function getBaseUrl() {
   const v = import.meta.env.VITE_API_BASE_URL
   if (typeof v === 'string' && v.trim()) return v.trim()
 
-  // Если задана прокси через vite: используем /api
   if (import.meta.env.DEV) return '/api'
   return defaultBaseUrl
+}
+
+function extractErrorMessage(status: number, body: unknown): string {
+  if (typeof body === 'string' && body.trim()) {
+    return body
+  }
+
+  if (body && typeof body === 'object') {
+    const data = body as {
+      message?: string
+      breeds?: string[]
+    }
+
+    if (data.message) {
+      if (Array.isArray(data.breeds) && data.breeds.length > 0) {
+        return `${data.message}: ${data.breeds.join(', ')}`
+      }
+
+      return data.message
+    }
+  }
+
+  return `HTTP ${status}`
 }
 
 export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
@@ -50,10 +72,13 @@ export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit):
         body = text || undefined
       }
     } catch {
-      // ignore
+      //
     }
 
-    throw new ApiError(`HTTP ${res.status}`, { status: res.status, body })
+    throw new ApiError(extractErrorMessage(res.status, body), {
+      status: res.status,
+      body,
+    })
   }
 
   if (res.status === 204) {
@@ -72,4 +97,3 @@ export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit):
 
   return text as T
 }
-
