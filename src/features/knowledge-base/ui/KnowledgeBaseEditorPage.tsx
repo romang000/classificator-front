@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Header } from '../../../shared/ui/Header/Header'
 import {
   checkFillKnowledge,
   createBreed,
@@ -17,10 +17,10 @@ import {
   getProperties,
   getPropertyValues,
   getBreedPropertyValues
-} from '../../api/knowledgeApi'
-import type { BreedPropertyRequest, Id, Property, PropertyValue } from '../../api/models'
+} from '../api/knowledgeApi'
+import type { BreedPropertyRequest, Id, Property, PropertyValue } from '../../../entities/breed/model/types'
 import type { Dispatch, SetStateAction } from 'react'
-import { ApiError } from '../../api/client'
+import { ApiError } from '../../../shared/api/client'
 
 type EditorSection =
   | 'breeds'
@@ -55,8 +55,6 @@ function getErrorMessage(error: unknown): string {
 }
 
 export default function KnowledgeBaseEditorPage() {
-  const navigate = useNavigate()
-
   const [section, setSection] = useState<EditorSection>('breeds')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -846,15 +844,10 @@ export default function KnowledgeBaseEditorPage() {
   })()
 
   return (
-    <div className="appFrame">
-      <div className="topBar">
-        <div className="topBarTitle">Редактор баз знаний</div>
-        <button className="topBarExit" type="button" onClick={() => navigate('/')}>
-          Перейти к классификации
-        </button>
-      </div>
-
-      <div className="kbLayout">
+    <>
+      <Header title='Редактор базы знаний' />
+      <div className="appFrame">
+        <div className="kbLayout">
         <div className="sidebar">
           <button
             className={`sidebarButton ${section === 'breeds' ? 'sidebarButtonActive' : ''}`}
@@ -908,5 +901,6 @@ export default function KnowledgeBaseEditorPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

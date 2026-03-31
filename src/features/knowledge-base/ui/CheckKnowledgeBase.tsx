@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Header } from '../../../shared/ui/Header/Header'
 import {
   getBreeds,
   getProperties,
   getPropertyValues,
   getBreedPropertiesByBreedId,
   getBreedPropertyValues,
-} from '../../api/knowledgeApi'
-import type { Id, Property, PropertyValue } from '../../api/models'
+} from '../api/knowledgeApi'
+import type { Id, Property, PropertyValue } from '../../../entities/breed/model/types'
 
 export function CheckKnowledgeBase() {
   const navigate = useNavigate()
@@ -129,15 +130,17 @@ export function CheckKnowledgeBase() {
   }, [breeds, selectedBreedId])
 
   return (
-    <div className="appFrame">
-      <div className="topBar">
-        <div className="topBarTitle">База знаний</div>
-        <button className="topBarExit" type="button" onClick={() => navigate('/')}>
-          Перейти к классификации
-        </button>
-      </div>
+    <>
+      <Header title='Просмотр базы знаний'/>
+      <div className="appFrame">
+        <div className="topBar">
+          <div className="topBarTitle">База знаний</div>
+          <button className="topBarExit" type="button" onClick={() => navigate('/')}>
+            Перейти к классификации
+          </button>
+        </div>
 
-      <div className="kbLayout" style={{ gridTemplateColumns: '1fr' }}>
+        <div className="kbLayout" style={{ gridTemplateColumns: '1fr' }}>
         <div className="contentBox">
           {error && <div className="alertBox">{error}</div>}
           {loading && <div className="loadingText">Подождите...</div>}
@@ -257,5 +260,6 @@ export function CheckKnowledgeBase() {
         </div>
       </div>
     </div>
+    </>
   )
 }

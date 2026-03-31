@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Header } from '../../../shared/ui/Header/Header'
 import {
   getBreedsByPropertyValue,
   getProperties,
   getPropertyValues,
-} from '../../api/knowledgeApi'
-import type { Id, Property, PropertyValue } from '../../api/models'
+} from '../../knowledge-base/api/knowledgeApi'
+import type { Id, Property, PropertyValue } from '../../../entities/breed/model/types'
 
 export default function ClassificationPage() {
   const navigate = useNavigate()
@@ -81,13 +82,12 @@ export default function ClassificationPage() {
   }
 
   return (
-    <div className="appFrame">
-      <div className="topBar">
-        <div className="topBarTitle">Выбор исходных значений</div>
-        <button className="topBarExit" type="button" onClick={() => navigate('/editor')}>
-          Перейти в редактор базы знаний
-        </button>
-      </div>
+    <>
+      <Header title='Классификация'/>
+      <div className="appFrame">
+        <div className="topBar">
+          <div className="topBarTitle">Выбор исходных значений</div>
+        </div>
 
       <div className="contentBox">
         <div className="threeCols">
@@ -203,6 +203,7 @@ export default function ClassificationPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 

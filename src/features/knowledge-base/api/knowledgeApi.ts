@@ -1,4 +1,4 @@
-import { apiFetch } from './client'
+import { apiFetch } from '../../../shared/api/client'
 import type {
   BreedCheckFillDto,
   BreedGetByPropertyValueDto,
@@ -15,7 +15,7 @@ import type {
   PropertyResponse,
   PropertyValueRequest,
   PropertyValueResponse,
-} from './models'
+} from '../../../entities/breed/model/types'
 
 export async function getBreeds(): Promise<BreedResponse[]> {
   return apiFetch<BreedResponse[]>('/breeds')
