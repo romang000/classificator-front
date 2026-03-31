@@ -472,7 +472,10 @@ export default function KnowledgeBaseEditorPage() {
       case 'propertyValues':
         return (
           <div>
-            <div className="pillTabs" style={{ marginTop: 4, marginBottom: 10 }}>
+            <div className="innerPanelTitle" style={{ textAlign: 'left', marginBottom: 1 }}>
+              Возможные значения
+            </div>
+            <div className="pillTabs" style={{ marginBottom: 10 }}>
               {properties.map((p) => {
                 const on = p.id === selectedPropertyId
                 return (
