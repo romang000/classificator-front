@@ -1,15 +1,14 @@
-import { ResultPanel } from "./ResultPanel"
-
 type ExplanationCardProps = {
   text: string
 }
 
 export function ExplanationCard({ text }: ExplanationCardProps) {
   return (
-    <ResultPanel title="Объяснение">
-      <p style={{ fontSize: 16, margin: 0, color: "#2a2a2a", whiteSpace: "pre-line" }}>
+    <div className="innerPanel">
+      <div className="innerPanelTitle">Информация об анализе</div>
+      <p style={{ fontSize: 15, margin: 0, color: "#2a2a2a", whiteSpace: "pre-line", lineHeight: 1.6 }}>
         {text}
       </p>
-    </ResultPanel>
+    </div>
   )
 }
