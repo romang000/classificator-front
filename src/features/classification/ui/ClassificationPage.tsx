@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Header } from '../../../shared/ui/Header/Header'
 import {
+  getBreedByModel,
   getBreedsByPropertyValue,
   getProperties,
   getPropertyValues,
 } from '../../knowledge-base/api/knowledgeApi'
-import type { Id, Property, PropertyValue } from '../../../entities/breed/model/types'
+import type { Id, Property, PropertyValue, BreedGetByPropertyValueResponse, CatFeatures, RankRequest, RankResponse } from '../../../entities/breed/model/types'
 
 export default function ClassificationPage() {
   const navigate = useNavigate()
@@ -19,7 +20,10 @@ export default function ClassificationPage() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<unknown>(null)
+  const [result, setResult] = useState<BreedGetByPropertyValueResponse | undefined>(undefined)
+  const [modelResult, setModelResult] = useState<RankResponse | undefined>(undefined)
+
+  const multipleResults = Array.isArray(result?.breeds) && result.breeds.length > 1
 
   useEffect(() => {
     async function run() {
@@ -66,7 +70,7 @@ export default function ClassificationPage() {
   async function submitClassification() {
     setLoading(true)
     setError(null)
-    setResult(null)
+    setResult(undefined)
     try {
       const payload = Object.entries(selectedValueByProperty).map(([propertyIdStr, valueId]) => ({
         propertyId: Number(propertyIdStr) as Id,
@@ -81,128 +85,203 @@ export default function ClassificationPage() {
     }
   }
 
+  function refineWithModel() {
+    console.log('Уточнение через модель', result)
+
+    if (!result || !Array.isArray(result?.breeds) || result.breeds.length === 0) {
+      console.error('Нет результатов для уточнения', result)
+      setError('Нет пород для уточнения')
+      return
+    }
+
+    const candidateBreeds: string[] = result?.breeds.map((breed: any) => breed.name)
+
+    const features: CatFeatures = {
+      woolLength: result?.woolLength || null,
+      woolColor: result?.woolColor || null,
+      woolType: result?.woolType || null,
+      earType: result?.earType || null,
+      eyeColor: result?.eyeColor || null,
+      eyeShape: result?.eyeShape || null,
+      physique: result?.physique || null,
+      tail: result?.tail || null,
+      paws: result?.paws || null,
+    }
+
+    const payload: RankRequest = {
+      features: features,
+      candidateBreeds: candidateBreeds
+    }
+
+    setLoading(true)
+    setError(null)
+
+    getBreedByModel(payload)
+      .then(response => {
+        console.log('Результат уточнения:', response)
+        // Отображаем результат уточнения
+        setModelResult({
+          selectedBreed: response.selectedBreed,
+          confidence: response.confidence
+        })
+      })
+      .catch(err => {
+        console.error('Ошибка при уточнении:', err)
+        setError(`Ошибка при уточнении: ${String(err)}`)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+
+  }
+
   return (
     <>
-      <Header title='Классификация'/>
+      <Header title='Классификация' />
       <div className="appFrame">
         <div className="topBar">
           <div className="topBarTitle">Выбор исходных значений</div>
         </div>
 
-      <div className="contentBox">
-        <div className="threeCols">
-          <div className="innerPanel">
-            <div className="innerPanelTitle">Свойства</div>
-            {properties.map((p) => {
-              const on = p.id === selectedPropertyId
-              return (
-                <div
-                  key={p.id}
-                  className="optionLine"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelectedPropertyId(p.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') setSelectedPropertyId(p.id)
-                  }}
-                  style={{
-                    background: on ? 'rgba(242, 197, 140, 0.18)' : undefined,
-                    borderColor: on ? 'rgba(226,169,99,0.8)' : undefined,
-                  }}
-                >
-                  <span className={`radioLike ${on ? 'radioLikeOn' : ''}`} />
-                  <div className="optionText">{p.name}</div>
-                </div>
-              )
-            })}
-          </div>
-
-          <div className="innerPanel">
-            <div className="innerPanelTitle">Возможные значения</div>
-            {selectedPropertyId === null ? (
-              <div className="loadingText">Выберите свойство</div>
-            ) : valuesForSelectedProperty.length === 0 ? (
-              <div className="loadingText">Нет значений</div>
-            ) : (
-              valuesForSelectedProperty.map((v) => {
-                const on = v.id === selectedValueId
+        <div className="contentBox">
+          <div className="threeCols">
+            <div className="innerPanel">
+              <div className="innerPanelTitle">Свойства</div>
+              {properties.map((p) => {
+                const on = p.id === selectedPropertyId
                 return (
                   <div
-                    key={v.id}
+                    key={p.id}
                     className="optionLine"
                     role="button"
                     tabIndex={0}
-                    onClick={() => toggleValue(v.id)}
+                    onClick={() => setSelectedPropertyId(p.id)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') toggleValue(v.id)
+                      if (e.key === 'Enter') setSelectedPropertyId(p.id)
                     }}
                     style={{
-                      background: on ? 'rgba(242, 197, 140, 0.22)' : undefined,
+                      background: on ? 'rgba(242, 197, 140, 0.18)' : undefined,
                       borderColor: on ? 'rgba(226,169,99,0.8)' : undefined,
                     }}
                   >
                     <span className={`radioLike ${on ? 'radioLikeOn' : ''}`} />
-                    <div className="optionText">{v.value}</div>
+                    <div className="optionText">{p.name}</div>
                   </div>
                 )
-              })
-            )}
-          </div>
+              })}
+            </div>
 
-          <div className="innerPanel">
-            <div className="innerPanelTitle">Итого</div>
-            <div className="summaryBox">
-              {summaryLines.length ? (
-                summaryLines.map((l, idx) => (
-                  <div className="summaryLine" key={`${l}-${idx}`}>
-                    {l}
-                  </div>
-                ))
+            <div className="innerPanel">
+              <div className="innerPanelTitle">Возможные значения</div>
+              {selectedPropertyId === null ? (
+                <div className="loadingText">Выберите свойство</div>
+              ) : valuesForSelectedProperty.length === 0 ? (
+                <div className="loadingText">Нет значений</div>
               ) : (
-                <div className="loadingText" style={{ padding: 0 }}>
-                  Пока ничего не выбрано
-                </div>
+                valuesForSelectedProperty.map((v) => {
+                  const on = v.id === selectedValueId
+                  return (
+                    <div
+                      key={v.id}
+                      className="optionLine"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => toggleValue(v.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') toggleValue(v.id)
+                      }}
+                      style={{
+                        background: on ? 'rgba(242, 197, 140, 0.22)' : undefined,
+                        borderColor: on ? 'rgba(226,169,99,0.8)' : undefined,
+                      }}
+                    >
+                      <span className={`radioLike ${on ? 'radioLikeOn' : ''}`} />
+                      <div className="optionText">{v.value}</div>
+                    </div>
+                  )
+                })
               )}
             </div>
 
-            {result !== null && (
-              <div style={{ marginTop: 12 }}>
-                <div className="innerPanelTitle" style={{ marginBottom: 8 }}>
-                  Результат
-                </div>
-                {Array.isArray(result) ? (
-                  result.map((breed: any) => (
-                    <div key={breed.id} className="summaryLine">
-                      {breed.name}
+            <div className="innerPanel">
+              <div className="innerPanelTitle">Итого</div>
+              <div className="summaryBox">
+                {summaryLines.length ? (
+                  summaryLines.map((l, idx) => (
+                    <div className="summaryLine" key={`${l}-${idx}`}>
+                      {l}
                     </div>
                   ))
                 ) : (
-                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 14 }}>
-                    {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
-                  </pre>
+                  <div className="loadingText" style={{ padding: 0 }}>
+                    Пока ничего не выбрано
+                  </div>
                 )}
               </div>
-            )}
+
+              {result?.breeds !== null && (
+                <div style={{ marginTop: 12 }}>
+                  <div className="innerPanelTitle" style={{ marginBottom: 8 }}>
+                    Результат
+                  </div>
+                  {Array.isArray(result?.breeds) ? (
+                    result.breeds.map((breed: any) => (
+                      <div key={breed.id} className="summaryLine">
+                        {breed.name}
+                      </div>
+                    ))
+                  ) : (
+                    <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 14 }}>
+                      {typeof result === 'string' ? result : JSON.stringify(result, null, 2)}
+                    </pre>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {error && <div className="alertBox" style={{ marginTop: 12 }}>{error}</div>}
+          {error && <div className="alertBox" style={{ marginTop: 12 }}>{error}</div>}
 
-        <div className="formRow" style={{ gridTemplateColumns: '1fr 240px' }}>
-          <button className="smallActionBtn" type="button" onClick={() => navigate('/view')}>
-            Посмотреть базу знаний
-          </button>
-          <button
-            className="primaryBtn"
-            type="button"
-            disabled={loading}
-            onClick={submitClassification}
-          >
-            {loading ? 'Определяем...' : 'Определить породу кошки'}
-          </button>
+          <div className="formRow" style={{ gridTemplateColumns: '1fr 240px' }}>
+            <button className="smallActionBtn" type="button" onClick={() => navigate('/view')}>
+              Посмотреть базу знаний
+            </button>
+            <button
+              className="primaryBtn"
+              type="button"
+              disabled={loading}
+              onClick={submitClassification}
+            >
+              {loading ? 'Определяем...' : 'Определить породу кошки'}
+            </button>
+
+            {multipleResults && (
+              <button
+                className="primaryBtn"
+                type="button"
+                onClick={refineWithModel}
+              >
+                Уточнить у модели
+              </button>
+            )}
+
+          </div>
+
+          {modelResult && (
+            <div style={{ marginTop: 12 }}>
+              <div className="innerPanelTitle" style={{ marginBottom: 8 }}>
+                Результат уточнения модели
+              </div>
+              <div className="summaryLine">
+                Порода: {modelResult.selectedBreed}
+              </div>
+              <div className="summaryLine">
+                Уверенность: {(modelResult.confidence * 100).toFixed(2)}%
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </div>
     </>
   )
 }

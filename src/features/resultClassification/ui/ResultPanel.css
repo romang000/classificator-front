@@ -1,0 +1,31 @@
+.result-panel {
+  margin-bottom: 64px;
+}
+
+.result-panel__title {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 500;
+  color: #000000;
+}
+
+.result-panel__box {
+  width: 100%;
+  padding: 32px 24px;
+  border: 2px solid #a0a0a0;
+  border-radius: 24px;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.result-panel__text {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.5;
+  color: #000000;
+  white-space: pre-line;
+}
+
+.result-panel__text--result {
+  font-size: 24px;
+}

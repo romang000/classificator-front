@@ -11,13 +11,15 @@ export class ApiError extends Error {
 }
 
 const defaultBaseUrl = 'http://localhost:8080'
+const modelUrl = 'http://localhost:8000'
 
-function getBaseUrl() {
+function getBaseUrl(isModel?: boolean) {
   const v = import.meta.env.VITE_API_BASE_URL
   if (typeof v === 'string' && v.trim()) return v.trim()
 
+  if (isModel && import.meta.env.DEV) return modelUrl
   if (import.meta.env.DEV) return '/api'
-  return defaultBaseUrl
+  return isModel ? modelUrl : defaultBaseUrl
 }
 
 function extractErrorMessage(status: number, body: unknown): string {
@@ -43,8 +45,8 @@ function extractErrorMessage(status: number, body: unknown): string {
   return `HTTP ${status}`
 }
 
-export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
-  const baseUrl = getBaseUrl()
+export async function apiFetch<T>(input: RequestInfo | URL, init?: RequestInit, isModel?: boolean): Promise<T> {
+  const baseUrl = getBaseUrl(isModel)
 
   const url =
     typeof input === 'string'

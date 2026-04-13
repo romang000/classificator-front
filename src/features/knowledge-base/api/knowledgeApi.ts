@@ -10,11 +10,14 @@ import type {
   BreedPropertyValueResponse,
   BreedRequest,
   BreedResponse,
+  BreedGetByPropertyValueResponse,
   Id,
   PropertyRequest,
   PropertyResponse,
   PropertyValueRequest,
   PropertyValueResponse,
+  RankRequest,
+  RankResponse,
 } from '../../../entities/breed/model/types'
 
 export async function getBreeds(): Promise<BreedResponse[]> {
@@ -32,8 +35,8 @@ export async function deleteBreed(id: Id): Promise<void> {
   await apiFetch<void>(`/breeds/${id}`, { method: 'DELETE' })
 }
 
-export async function getBreedsByPropertyValue(payload: BreedGetByPropertyValueDto[]): Promise<BreedResponse[]> {
-  return apiFetch<BreedResponse[]>('/breeds/by-property-value', {
+export async function getBreedsByPropertyValue(payload: BreedGetByPropertyValueDto[]): Promise<BreedGetByPropertyValueResponse> {
+  return apiFetch<BreedGetByPropertyValueResponse>('/breeds/by-property-value', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
@@ -60,6 +63,13 @@ export async function deleteProperty(id: Id): Promise<void> {
 
 export async function getPropertyValues(): Promise<PropertyValueResponse[]> {
   return apiFetch<PropertyValueResponse[]>('/property-value')
+}
+
+export async function getBreedByModel(payload: RankRequest): Promise<RankResponse> {
+  return apiFetch<RankResponse>('/rank', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }, true)
 }
 
 export async function getPropertyValuesByPropertyId(propertyId: Id): Promise<PropertyValueResponse[]> {

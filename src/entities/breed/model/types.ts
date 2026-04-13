@@ -9,6 +9,41 @@ export interface BreedResponse {
   name: string
 }
 
+export interface BreedGetByPropertyValueResponse {
+  breeds: BreedResponse[]
+  woolLength: string | null
+  woolColor: string | null
+  woolType: string | null
+  earType: string | null
+  eyeColor: string | null
+  eyeShape: string | null
+  physique: string | null
+  tail: string | null
+  paws: string | null
+}
+
+export interface CatFeatures {
+  woolLength: string | null
+  woolColor: string | null
+  woolType: string | null
+  earType: string | null
+  eyeColor: string | null
+  eyeShape: string | null
+  physique: string | null
+  tail: string | null
+  paws: string | null
+}
+
+export interface RankRequest {
+  features: CatFeatures
+  candidateBreeds: string[]
+}
+
+export interface RankResponse {
+  selectedBreed: string
+  confidence: number
+}
+
 export interface PropertyRequest {
   name: string
 }
