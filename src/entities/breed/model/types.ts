@@ -11,6 +11,7 @@ export interface BreedResponse {
 
 export interface BreedGetByPropertyValueResponse {
   breeds: BreedResponse[]
+  rejectedBreeds: BreedGetByPropertyValueRejectResponse[]
   woolLength: string | null
   woolColor: string | null
   woolType: string | null
@@ -20,6 +21,18 @@ export interface BreedGetByPropertyValueResponse {
   physique: string | null
   tail: string | null
   paws: string | null
+}
+
+export interface BreedGetByPropertyValueRejectResponse {
+  breed: BreedResponse
+  rejectReason: BreedGetByPropertyValueRejectionReasonResponse
+}
+
+export interface BreedGetByPropertyValueRejectionReasonResponse {
+  propertyName: string
+  actualValue: string
+  expectedValue: string
+  reason: string
 }
 
 export interface CatFeatures {
